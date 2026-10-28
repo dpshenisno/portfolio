@@ -42,3 +42,15 @@ footer{position:relative;isolation:isolate;overflow:hidden}footer>*{position:rel
 @media(max-width:600px){.home-intro{padding-top:34px;padding-bottom:70px}.home-kicker{font-size:11px;gap:20px}.home-kicker>span:last-child{text-align:right}.home-name{font-size:clamp(52px,12.4vw,78px);margin:78px 0 54px;line-height:1;letter-spacing:-.075em}.home-name span:last-child{text-align:left}.home-about{grid-template-columns:1fr;gap:42px}.home-about>p{font-size:27px}.home-companies{justify-self:start}.company-marks>img{width:180px;height:69px}.home-section-heading{display:block;margin-bottom:30px}.home-section-heading>span{display:block;margin-top:12px}.home-work{padding-top:0;padding-bottom:30px}.project-row{grid-template-columns:1fr;gap:0;margin-bottom:60px}.project-cloud{min-height:250px;padding:24px;border-radius:20px}.project-cloud>span:first-of-type{font-size:30px}.project-info{padding:26px 0 0;max-width:none}.project-info h3{font-size:30px}.project-info p{font-size:16px}.project-preview{position:relative;left:auto;top:auto;width:100%;opacity:1;transform:none!important;grid-row:2;margin-top:-140px;padding:0 20px 0;z-index:2}.project-preview img{box-shadow:0 15px 30px #0002}.project-cloud{padding-bottom:145px;min-height:330px}.project-row:hover .project-info{transform:none}.home-experience{padding-bottom:80px}.home-experience p{font-size:18px}.experience-companies{gap:18px}.experience-companies>img{width:190px}}
 @media(hover:none){.project-preview{opacity:1;transform:translate3d(0,-50%,0) rotate(-3deg)}}
 @media(prefers-reduced-motion:reduce){.project-preview,.project-info,.cloud-shape,.home-down{transition:none}.project-row:hover .cloud-shape,.project-row:hover .project-info{transform:none}}
+
+/* Bounded WebGL lens: original image remains as the no-motion/no-WebGL fallback. */
+.hero-lens{position:absolute;left:0;width:100%;pointer-events:none;opacity:0;z-index:2}.scene-fringe,.scene-sheen{display:none}@media(prefers-reduced-motion:reduce){.hero-lens{display:none}}
+
+/* Lens portal escapes both rounded hero clipping ancestors. */
+body>.hero-lens{position:fixed;left:0;width:100%;z-index:1;pointer-events:none}
+
+/* Keep the original text and shading above both the photo and lens portal. */
+.hero{isolation:auto}.hero-copy{z-index:2}
+
+/* Wheel inertia owns interpolation; anchors retain native smooth scrolling. */
+html.wheel-smoothing{scroll-behavior:auto!important}

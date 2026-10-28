@@ -173,6 +173,7 @@ function scheduleMotion() {
   if (!framePending) { framePending = true; requestAnimationFrame(paintMotion); }
 }
 addEventListener('scroll', scheduleMotion, { passive: true });
+addEventListener('portfolio:scroll-frame', paintMotion);
 addEventListener('resize', scheduleMotion, { passive: true });
 motionPreference.addEventListener('change', () => {
   if (motionPreference.matches) {
@@ -193,30 +194,7 @@ scheduleMotion();
 document.fonts.ready.then(scheduleMotion);
 
 
-// Lightweight optical impression: only compositor transforms and translucent layers.
-const scene=document.querySelector('.hero-art');
-let sceneFrame=0,sceneEnergy=0,sceneY=scrollY,sceneTime=performance.now(),sceneDirection=1;
-function stopScene(){if(sceneFrame)cancelAnimationFrame(sceneFrame);sceneFrame=0;sceneEnergy=0;body.classList.remove('scene-active');scene.style.removeProperty('transform');scene.style.setProperty('--scene-power','0');}
-function paintScene(time){
- sceneFrame=0;
- if(motionPreference.matches||document.hidden){stopScene();return;}
- const dt=Math.min(64,Math.max(8,time-sceneTime)),delta=scrollY-sceneY;
- sceneY=scrollY;sceneTime=time;
- const rect=hero.getBoundingClientRect();
- if(rect.bottom<=0||rect.top>=innerHeight){stopScene();return;}
- sceneEnergy=Math.max(Math.min(1,Math.abs(delta)/dt/2.4),sceneEnergy*Math.exp(-dt/210));
- if(Math.abs(delta)>.5)sceneDirection=Math.sign(delta);
- if(sceneEnergy<.015){stopScene();return;}
- const power=sceneEnergy*clamp(rect.bottom/160),mobile=innerWidth<640?.55:1;
- body.classList.add('scene-active');
- scene.style.transform='perspective(1800px) rotateX('+(power*sceneDirection*2.6*mobile)+'deg) skewY('+(power*sceneDirection*.65*mobile)+'deg) scale('+(1+power*.018)+')';
- scene.style.setProperty('--scene-power',power.toFixed(3));
- scene.style.setProperty('--sheen-x',(-24+clamp((80-rect.top)/rect.height)*70)+'%');
- sceneFrame=requestAnimationFrame(paintScene);
-}
-addEventListener('scroll',()=>{if(motionPreference.matches||sceneFrame)return;sceneTime=performance.now()-16;sceneFrame=requestAnimationFrame(paintScene);},{passive:true});
-motionPreference.addEventListener('change',stopScene);
-document.addEventListener('visibilitychange',()=>{if(document.hidden)stopScene();});
+
 }
 const contact=document.querySelector('footer');
 let contactFrame=0,contactPoint=null;
