@@ -1,0 +1,40 @@
+/* A quiet, layered atmosphere behind the orbit. */
+.home-orbit{overflow:visible;z-index:2}
+.home-orbit:before{content:'';position:absolute;inset:0;z-index:-2;pointer-events:none;background:radial-gradient(ellipse at 14% 22%,#bee6e64d,transparent 44%),radial-gradient(ellipse at 82% 30%,#dccce83d,transparent 43%),radial-gradient(ellipse at 63% 90%,#f4decf46,transparent 42%),radial-gradient(ellipse at 30% 78%,#d3e9d336,transparent 38%);mask-image:linear-gradient(transparent,#000 12%,#000 85%,transparent)}
+.home-orbit:after{content:'';position:absolute;inset:0;z-index:-1;pointer-events:none;background:url('./assets/hero-grain.png') repeat;background-size:180px;opacity:.035;animation:orbit-grain .4s steps(1) infinite;animation-play-state:paused;mask-image:linear-gradient(transparent,#000 12%,#000 85%,transparent)}
+.home-orbit.is-orbit-visible:after{animation-play-state:running}.dark .home-orbit:before{opacity:.36}.dark .home-orbit:after{opacity:.045}
+@keyframes orbit-grain{0%{background-position:0 0}25%{background-position:37px 19px}50%{background-position:11px 47px}75%{background-position:53px 7px}}
+/* Real project pictures, progressive blur below, labels over the blurred image. */
+.orbit-card{height:calc(var(--orbit-card-width,180px)*1.18);border:5px solid #ffffffdf;border-radius:17px;background:#d1e0e4;box-shadow:0 12px 30px #233e5220;overflow:visible}
+.orbit-card:before{display:none}.orbit-card:after{inset:0;border-radius:12px;opacity:.12;background:linear-gradient(130deg,#fff8,transparent 45%,#fff2);transform:none;z-index:2}
+.orbit-card-art{inset:0;border-radius:12px;overflow:hidden;opacity:1!important}
+.orbit-card-art:after{content:'';position:absolute;inset:20% 0 0;background:linear-gradient(transparent,#091e2920 45%,#09202d80 100%)}
+.orbit-card-cover,.orbit-card-blurred{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:50% 35%;border-radius:12px;pointer-events:none}
+.orbit-card-blurred{filter:blur(10px);transform:scale(1.13);mask-image:linear-gradient(transparent 26%,#0004 47%,#000b 69%,#000 92%);-webkit-mask-image:linear-gradient(transparent 26%,#0004 47%,#000b 69%,#000 92%)}
+.orbit-card-label{inset:auto 10px 37px;display:block;padding:0!important;text-align:left;font-size:clamp(10px,1vw,14px);font-weight:500;line-height:1.15;letter-spacing:-.035em;text-shadow:0 1px 8px #0004;z-index:3}
+.orbit-card-kind{position:absolute;left:10px;right:22px;bottom:13px;font-size:clamp(7px,.62vw,9px);color:#fff;line-height:1.2;text-align:left;z-index:3;opacity:.86;pointer-events:none}
+.orbit-card-arrow{position:absolute;right:10px;bottom:13px;color:white;font-size:15px;line-height:1;z-index:3;pointer-events:none}
+.orbit-card.is-active{opacity:0;pointer-events:auto}
+.orbit-flagship{border-color:#fff;box-shadow:0 0 0 1px #fff,0 0 24px #99e7dd8c,0 0 52px #a9d5ef80,0 18px 42px #236c8333}
+.orbit-flagship:after{opacity:.4;background:linear-gradient(135deg,#e4ffff9c,transparent 37%,transparent 65%,#9deee877)}
+.orbit-flagship:hover{box-shadow:0 0 0 1px #fff,0 0 34px #8ee9dcb3,0 0 70px #a9d5ef99,0 18px 42px #236c8333}
+.orbit-flagship-label,.orbit-project-kind:before{display:none!important}
+/* Unclipped shadows and interface fragments, including the hover bridge. */
+.orbit-stage,.orbit-preview-art{overflow:visible}
+.orbit-preview{overflow:visible;box-shadow:0 24px 58px #193c4c24}
+.orbit-preview:before{content:'';position:absolute;inset:-18px;border-radius:inherit;z-index:-1;pointer-events:auto}
+.orbit-cutout{pointer-events:auto}.orbit-preview .orbit-main-link{overflow:hidden;box-shadow:0 8px 30px #17334618}
+.project-departure .orbit-main-link{view-transition-name:none}
+.project-departure .orbit-preview.is-visible .orbit-main-link{view-transition-name:sber-project}
+/* The logo is vertically aligned with the heading, pinned to the right padding. */
+.hero-heading-row{justify-content:space-between}.hero-heading-row .hero-logo{margin-left:auto}
+/* No footer hover ring; retain only the travelling tint inside the letters. */
+footer .footer-cta:after{display:none!important;animation:none!important}footer:after{display:none}
+.project-arrival::view-transition-group(sber-project){animation-duration:1.35s;animation-timing-function:cubic-bezier(.45,0,.55,1)}
+.project-arrival::view-transition-new(root){animation-duration:1.35s;animation-timing-function:cubic-bezier(.45,0,.55,1)}
+.project-arrival::view-transition-old(root){animation-duration:.8s}
+.footer-lens{position:fixed;left:0;z-index:3;pointer-events:none;width:100%;opacity:0}
+.footer-lens-fallback{position:fixed;left:0;right:0;z-index:3;pointer-events:none;backdrop-filter:blur(2px) saturate(1.2);-webkit-backdrop-filter:blur(2px) saturate(1.2);background:linear-gradient(transparent,#b5dcdf14);mask-image:linear-gradient(transparent,#000)}
+.telegram-retry{font-size:11px}
+@media(max-width:600px){.orbit-card{border-width:4px;border-radius:12px}.orbit-card-art,.orbit-card-cover,.orbit-card-blurred,.orbit-card:after{border-radius:8px}.orbit-card-label{left:6px;right:6px;bottom:25px;font-size:8px}.orbit-card-kind{left:6px;bottom:8px;right:17px;font-size:6px}.orbit-card-arrow{right:6px;bottom:8px;font-size:12px}.orbit-preview{box-shadow:0 18px 38px #193c4c24}}
+@media(prefers-reduced-motion:reduce){.home-orbit:after{animation:none}.footer-lens,.footer-lens-fallback{display:none}.project-arrival::view-transition-group(sber-project),.project-arrival::view-transition-new(root),.project-arrival::view-transition-old(root){animation-duration:.01ms!important}}

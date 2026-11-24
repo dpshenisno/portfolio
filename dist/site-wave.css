@@ -1,0 +1,14 @@
+/* A black glass capsule, with the prismatic bloom confined to its lower edge. */
+.glow-trigger{position:fixed;left:max(16px,env(safe-area-inset-left));bottom:calc(16px + env(safe-area-inset-bottom));z-index:1100;isolation:isolate;display:flex;align-items:center;justify-content:center;gap:10px;width:126px;height:48px;padding:0 18px;border:1px solid #ffffff35;border-radius:999px;background:linear-gradient(125deg,#18191b,#040405 65%,#121217);box-shadow:inset 0 1px 1px #ffffff28,0 6px 24px #0003;color:#f7f7fb;font-size:13px;font-weight:400;letter-spacing:-.02em;cursor:pointer;overflow:hidden;transition:box-shadow .25s,transform .25s}
+.glow-trigger svg{width:19px;height:19px;flex-shrink:0;position:relative;z-index:2}.glow-trigger span{position:relative;z-index:2}
+.glow-trigger:before{content:'';position:absolute;z-index:0;left:8%;right:8%;height:25px;bottom:-18px;background:linear-gradient(90deg,#ff6674,#edbb7b,#d5fbcd,#69dcff,#8686ff,#e48cff);filter:blur(7px);opacity:.88;transition:bottom .35s,opacity .35s}
+.glow-trigger:after{content:'';position:absolute;z-index:1;left:19%;right:15%;bottom:0;height:1px;background:linear-gradient(90deg,transparent,#ffd9b7,#d9fffd,#70bcff,transparent);opacity:.95}
+.glow-trigger:hover,.glow-trigger.is-emitting{box-shadow:inset 0 1px 1px #ffffff42,0 6px 25px #0003,0 5px 18px #93bcff26}
+.glow-trigger:hover:before,.glow-trigger.is-emitting:before{bottom:-11px;opacity:1}
+.glow-trigger:active{transform:scale(.97)}.glow-trigger:focus-visible{outline:2px solid #799aff;outline-offset:5px}
+/* A single transparent color front crosses the current viewport on demand.
+   No cloned page, full-page filter, continuously running canvas, or input blocking. */
+.site-color-wave{--wave-radius:0px;position:fixed;inset:0;z-index:1050;pointer-events:none;opacity:0;background:conic-gradient(from 190deg at var(--wave-x) var(--wave-y),#80eaff,#a7b1ff,#ff98d5,#ffc999,#c5ffdc,#7cdcff,#bd9dff,#80eaff);mask-image:radial-gradient(circle at var(--wave-x) var(--wave-y),transparent max(0px,calc(var(--wave-radius) - 95px)),#0008 max(0px,calc(var(--wave-radius) - 44px)),#000 var(--wave-radius),#0006 calc(var(--wave-radius) + 28px),transparent calc(var(--wave-radius) + 90px));-webkit-mask-image:radial-gradient(circle at var(--wave-x) var(--wave-y),transparent max(0px,calc(var(--wave-radius) - 95px)),#0008 max(0px,calc(var(--wave-radius) - 44px)),#000 var(--wave-radius),#0006 calc(var(--wave-radius) + 28px),transparent calc(var(--wave-radius) + 90px))}
+.site-color-wave.wave-reduced{mask-image:none;-webkit-mask-image:none;background:radial-gradient(ellipse at var(--wave-x) var(--wave-y),#a3c9ff66,transparent 55%);opacity:.15}
+@media(max-width:600px){.glow-trigger{width:108px;height:44px;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));font-size:12px}}
+@media(prefers-reduced-motion:reduce){.glow-trigger,.glow-trigger:before{transition:none}.glow-trigger:active{transform:none}}

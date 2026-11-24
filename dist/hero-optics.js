@@ -5,8 +5,21 @@ if(!hero||!scene)return;
 const reduced=matchMedia('(prefers-reduced-motion: reduce)'), mobile=matchMedia('(max-width: 640px)');
 const bg=scene.querySelector('.hero-bg'), device=scene.querySelector('.hero-device');
 const canvas=document.createElement('canvas');canvas.className='hero-lens';canvas.setAttribute('aria-hidden','true');
+// Keep an optical strip visible even when the browser cannot create WebGL.
+let fallbackRunning=false;
+function enableFallback(){
+ if(fallbackRunning)return;fallbackRunning=true;
+ const strip=document.createElement('div');strip.className='hero-lens-fallback';strip.setAttribute('aria-hidden','true');
+ const art=document.createElement('div'),photo=bg.cloneNode(true),computer=device.cloneNode(true);
+ const clip=computer.querySelector('clipPath');if(clip){clip.id='fallback-laptop-contour';computer.querySelector('image').setAttribute('clip-path','url(#fallback-laptop-contour)');}
+ computer.removeAttribute('aria-label');art.append(photo,computer);strip.append(art);document.body.append(strip);
+ let pending=0;
+ function paintFallback(){pending=0;const r=hero.getBoundingClientRect();const progress=Math.min(1,Math.max(0,scrollY/(r.height*.8)*2.4));const amount=progress*progress*(3-2*progress);if(amount<.001||document.hidden||reduced.matches||r.bottom<=0||r.top>=innerHeight){strip.hidden=true;return;}strip.hidden=false;strip.style.opacity=amount;art.style.transform='scale('+(1+amount*.16)+','+(1+amount*.75)+') skewX('+(-2*amount)+'deg)';const top=Math.max(0,r.top);strip.style.top=top+'px';strip.style.height=Math.min(innerHeight*.12,r.bottom-top)+'px';art.style.left=r.left+'px';art.style.top=(r.top-top)+'px';art.style.width=r.width+'px';art.style.height=r.height+'px';computer.style.transform=getComputedStyle(device).transform;photo.style.transform=getComputedStyle(bg).transform;}
+ function schedule(){if(!pending)pending=requestAnimationFrame(paintFallback);}
+ addEventListener('scroll',schedule,{passive:true});addEventListener('resize',schedule,{passive:true});addEventListener('portfolio:scroll-frame',()=>{if(pending)cancelAnimationFrame(pending);paintFallback();});document.addEventListener('visibilitychange',schedule);reduced.addEventListener('change',schedule);paintFallback();
+}
 const gl=canvas.getContext('webgl',{alpha:true,premultipliedAlpha:false,antialias:false,depth:false,stencil:false,preserveDrawingBuffer:false,powerPreference:'low-power'});
-if(!gl){console.warn('Hero lens: WebGL unavailable, keeping original image.');return;}
+if(!gl){console.warn('Hero lens: using the CSS optical fallback.');enableFallback();return;}
 const vertex=`attribute vec2 position;varying vec2 uv;void main(){uv=vec2((position.x+1.0)*.5,(1.0-position.y)*.5);gl_Position=vec4(position,0.0,1.0);}`;
 const fragment=`
 #ifdef GL_FRAGMENT_PRECISION_HIGH
@@ -14,7 +27,7 @@ precision highp float;
 #else
 precision mediump float;
 #endif
-varying vec2 uv;uniform sampler2D backdrop;uniform sampler2D laptop;uniform vec2 size;uniform vec2 band;uniform vec2 viewport;uniform float radius;uniform vec4 cover;uniform mat3 deviceInverse;uniform vec3 backgroundScale;uniform float power;
+varying vec2 uv;uniform sampler2D backdrop;uniform sampler2D laptop;uniform vec2 size;uniform vec2 band;uniform vec2 viewport;uniform float radius;uniform vec4 cover;uniform mat3 deviceInverse;uniform vec3 backgroundScale;uniform float power;uniform float ripplePhase;uniform float edgeWidth;
 vec4 sceneAt(vec2 p,float softness){
  vec2 b=(p-backgroundScale.yz)/backgroundScale.x;
  vec2 buv=(b-cover.xy)/cover.zw;
@@ -24,52 +37,63 @@ vec4 sceneAt(vec2 p,float softness){
  // Premultiply before filtering, so blurred transparent edges cannot turn white.
  vec2 q=abs(p-size*.5)-(size*.5-vec2(radius));
  float distanceToPhoto=length(max(q,0.0))+min(max(q.x,q.y),0.0)-radius;
- float alpha=1.0-smoothstep(-1.5,1.5,distanceToPhoto);
+ // Match coverage to the output pixel footprint, including adaptive resolution.
+ float alpha=1.0-smoothstep(-edgeWidth,edgeWidth,distanceToPhoto);
  return vec4(color*alpha,alpha);
 }
 void main(){
  vec2 p=vec2(uv.x*viewport.x-viewport.y,band.x+uv.y*band.y);
- // Smooth boundary: displacement and its first derivative vanish below the band.
+ // A shallow refracting wave travels through the existing top strip.
+ // Smooth envelopes preserve the untouched photo below without a hard join.
  float x=p.x/size.x-.5;
  float arch=clamp(1.0-4.0*x*x,0.0,1.0);
- // A shallow curved boundary, feathered only where displacement is subpixel.
- float extent=.82+.18*arch;
+ float extent=.84+.16*arch;
  float edge=max(0.0,1.0-uv.y/extent);
- float lens=edge*edge*edge;
- // Inverse lens mapping spreads the photo sideways instead of squeezing it.
- float spread=1.0+power*lens*(.24+.08*arch);
- // A convex, one-direction pull; slope stays positive even at maximum strength.
- float pull=power*(.10+.10*arch)*lens;
- vec2 samplePoint=vec2((.5+x/spread)*size.x,p.y+band.y*pull);
- // Reference: directional diffusion grows toward the viewport edge.
- // Five shared taps filter geometry, alpha, and color together in one pass.
- float diffusion=power*edge*edge*min(band.y*.10,10.0);
- float softness=power*edge*edge*2.5;
- vec2 trail=vec2(x*.24,1.0)*diffusion;
+ float envelope=edge*edge*edge;
+ float ridge=.22+.10*arch+.025*sin(x*7.0+ripplePhase);
+ float distanceToRidge=(uv.y-ridge)/.19;
+ float ripple=exp(-distanceToRidge*distanceToRidge*1.8);
+ float wave=ripple*envelope;
+ // The image bends through a single convex wave rather than stacked RGB copies.
+ float spread=1.0+power*(envelope*(.22+.12*arch)+wave*.11);
+ float pull=power*(envelope*(.09+.045*arch)+wave*.045);
+ float drift=sin(x*6.0+ripplePhase)*wave*power*.009;
+ vec2 samplePoint=vec2((.5+x/spread+drift)*size.x,p.y+band.y*pull);
+ // Spectral refraction is derived from the image itself, never painted as a stripe.
+ // Keep the original five taps and cached mip pyramids: no extra render passes.
+ float diffusion=power*min(22.0,edge*edge*7.0+wave*29.0);
+ float softness=power*(edge*edge*1.4+wave*1.8);
+ vec2 trail=normalize(vec2(sin(x*6.0+ripplePhase)*.45,1.0))*diffusion;
  vec4 a=sceneAt(samplePoint-trail*1.8,softness);
  vec4 b=sceneAt(samplePoint-trail*.65,softness);
  vec4 c=sceneAt(samplePoint,softness);
  vec4 d=sceneAt(samplePoint+trail*.65,softness);
  vec4 e=sceneAt(samplePoint+trail*1.8,softness);
  vec4 soft=a*.12+b*.23+c*.30+d*.23+e*.12;
- // Reuse the same taps for dispersion rather than rendering RGB layers separately.
+ // Normalize each spectral filter by its own coverage. Transparent samples must
+ // never inject black into one channel and create a saturated silhouette.
  vec4 red=a*.22+b*.30+c*.28+d*.15+e*.05;
  vec4 blue=a*.05+b*.15+c*.28+d*.30+e*.22;
- float fringe=clamp(power*edge*edge*.82,0.0,.9);
- vec3 filtered=vec3(mix(soft.r,red.r,fringe),soft.g,mix(soft.b,blue.b,fringe));
- float alpha=max(soft.a,max(mix(soft.a,red.a,fringe),mix(soft.a,blue.a,fringe)));
+ float fringe=clamp(power*(edge*edge*.48+wave*2.6),0.0,.95);
+ // Keep dispersion inside the image; fade it continuously near the contour.
+ fringe*=smoothstep(.15,.98,min(a.a,min(c.a,e.a)));
+ vec3 base=soft.rgb/max(soft.a,.0001);
+ vec3 spectrum=vec3(red.r/max(red.a,.0001),c.g/max(c.a,.0001),blue.b/max(blue.a,.0001));
+ vec3 filtered=mix(base,spectrum,fringe);
+ // Shared, filtered alpha makes all channels meet the page at the same soft edge.
+ float alpha=soft.a;
  float feather=smoothstep(0.0,.18,edge);
- gl_FragColor=vec4(filtered/max(alpha,.0001),alpha*feather);
+ gl_FragColor=vec4(filtered,alpha*feather);
 }`;
 let program;
-function fail(error){if(error)console.warn('Hero lens:',error.message||String(error));canvas.remove();if(frame)cancelAnimationFrame(frame);frame=0;ready=false;}
+function fail(error){if(error)console.warn('Hero lens:',error.message||String(error));canvas.remove();if(frame)cancelAnimationFrame(frame);frame=0;ready=false;enableFallback();}
 function shader(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){gl.deleteShader(s);throw Error(gl.getShaderInfoLog(s)||'Shader unavailable');}return s;}
 let frame=0,ready=false,visible=true,lastInput=performance.now(),lastFrame=0,lastPaint=0,slowFrames=0,resolution=1;
 try{
  program=gl.createProgram();const vs=shader(gl.VERTEX_SHADER,vertex),fs=shader(gl.FRAGMENT_SHADER,fragment);gl.attachShader(program,vs);gl.attachShader(program,fs);gl.linkProgram(program);gl.deleteShader(vs);gl.deleteShader(fs);if(!gl.getProgramParameter(program,gl.LINK_STATUS))throw Error('Program unavailable');gl.useProgram(program);
  const buffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buffer);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);const a=gl.getAttribLocation(program,'position');gl.enableVertexAttribArray(a);gl.vertexAttribPointer(a,2,gl.FLOAT,false,0,0);
 }catch(error){fail(error);return;}
-const uniforms=Object.fromEntries(['backdrop','laptop','size','band','viewport','radius','cover','deviceInverse','backgroundScale','power'].map(name=>[name,gl.getUniformLocation(program,name)]));
+const uniforms=Object.fromEntries(['backdrop','laptop','size','band','viewport','radius','cover','deviceInverse','backgroundScale','power','ripplePhase','edgeWidth'].map(name=>[name,gl.getUniformLocation(program,name)]));
 function texture(source,unit,name){
  // Cache a power-of-two texture pyramid once; mip sampling provides smooth
  // diffusion between the directional taps without a full-frame blur pass.
@@ -101,16 +125,18 @@ function paint(now){
  const paintStarted=performance.now();lastFrame=now;
  const rect=hero.getBoundingClientRect(),w=scene.clientWidth,h=scene.clientHeight;
  if(rect.bottom<=0||rect.top>=innerHeight){stop();return;}
- const scrollProgress=Math.min(1,Math.max(0,(80-rect.top)/(h*.8)));
+ const scrollProgress=Math.min(1,Math.max(0,scrollY/(h*.8)));
  const eased=Math.min(1,scrollProgress*2.4);
- const strength=eased*eased*(3-2*eased)*(mobile.matches?.95:1.3);
+ const strength=eased*eased*(3-2*eased)*(mobile.matches?1.12:1.3);
  if(strength<.001){stop();return;}
  const overscan=Math.min(28,innerHeight*.035)*Math.min(1,strength);
  const canvasTop=Math.max(0,rect.top-overscan);
  const bandTop=canvasTop-rect.top,bandHeight=Math.min(rect.bottom-canvasTop,innerHeight*.10);
  const viewportWidth=document.documentElement.clientWidth;
  if(bandHeight<2){stop();return;}
- const width=Math.min(viewportWidth,mobile.matches?680:1100)*resolution,height=Math.max(1,Math.round(bandHeight*width/viewportWidth));
+ // Only the shallow strip gets a sharper backing buffer, never the full hero.
+ const density=Math.min(devicePixelRatio||1,1.25);
+ const width=Math.min(viewportWidth*density,mobile.matches?1000:2304)*resolution,height=Math.max(1,Math.round(bandHeight*width/viewportWidth));
  if(canvas.width!==Math.round(width)||canvas.height!==height){canvas.width=Math.round(width);canvas.height=height;gl.viewport(0,0,canvas.width,canvas.height);}
  canvas.style.top=canvasTop+'px';canvas.style.height=bandHeight+'px';
  const inv=inverseDevice();if(!inv){stop();return;}
@@ -118,8 +144,9 @@ function paint(now){
  const bs=getComputedStyle(bg),bm=new DOMMatrix(bs.transform==='none'?undefined:bs.transform),bo=bs.transformOrigin.split(' ').map(parseFloat);
  gl.uniform2f(uniforms.size,w,h);gl.uniform2f(uniforms.band,bandTop,bandHeight);gl.uniform2f(uniforms.viewport,viewportWidth,rect.left);gl.uniform1f(uniforms.radius,Math.min(parseFloat(getComputedStyle(hero).borderTopLeftRadius)||0,w/2,h/2));gl.uniform4f(uniforms.cover,(w-bw)/2,(h-bh)/2,bw,bh);gl.uniformMatrix3fv(uniforms.deviceInverse,false,inv);gl.uniform3f(uniforms.backgroundScale,bm.a,bo[0]*(1-bm.a)+bm.e,bo[1]*(1-bm.a)+bm.f);
  // Position determines the lens. Keep the composited frame when scrolling stops.
- gl.uniform1f(uniforms.power,strength);gl.drawArrays(gl.TRIANGLES,0,6);canvas.style.opacity='1';
- const cost=performance.now()-paintStarted;slowFrames=cost>12?slowFrames+1:Math.max(0,slowFrames-1);if(slowFrames>=3){resolution=Math.max(.6,resolution*.8);slowFrames=0;}
+ gl.uniform1f(uniforms.edgeWidth,Math.max(1.25,viewportWidth/canvas.width*1.35));
+ gl.uniform1f(uniforms.ripplePhase,scrollProgress*5.0);gl.uniform1f(uniforms.power,strength);gl.drawArrays(gl.TRIANGLES,0,6);canvas.style.opacity='1';
+ const cost=performance.now()-paintStarted;slowFrames=cost>12?slowFrames+1:Math.max(0,slowFrames-1);if(slowFrames>=3){resolution=Math.max(.75,resolution*.8);slowFrames=0;}
  // No idle animation loop: the next input requests the next frame.
 }
 addEventListener('scroll',()=>{lastInput=performance.now();wake();},{passive:true});

@@ -9,8 +9,12 @@ function setTheme(dark) {
 try { setTheme(localStorage.getItem('portfolio-theme') === 'dark'); } catch {}
 themeButton.addEventListener('click', () => {
   const dark = !body.classList.contains('dark');
-  setTheme(dark);
-  try { localStorage.setItem('portfolio-theme', dark ? 'dark' : 'light'); } catch {}
+  const apply = () => {
+    setTheme(dark);
+    try { localStorage.setItem('portfolio-theme', dark ? 'dark' : 'light'); } catch {}
+  };
+  if (typeof window.portfolioThemeTransition === 'function') window.portfolioThemeTransition(dark, apply);
+  else apply();
 });
 
 const menuButton = document.querySelector('.menu-toggle');

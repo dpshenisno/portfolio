@@ -1,0 +1,55 @@
+@property --wave-radius{syntax:'<length>';inherits:true;initial-value:0px}
+@view-transition{navigation:auto}
+/* Glass stays local to six small cards; the page never gets a live blur filter. */
+.orbit-card{isolation:isolate;border-radius:28px;transition:opacity .3s}
+.orbit-card:before{content:'';position:absolute;inset:8% 9%;border-radius:23px;border:1px solid #ffffffb0;background:linear-gradient(135deg,#ffffff38,#ffffff08 48%,#ffffff40);box-shadow:inset 1px 1px 2px #ffffffb8,inset -1px -2px 3px #ffffff55,0 9px 28px #17394b14;backdrop-filter:blur(8px) saturate(1.3);-webkit-backdrop-filter:blur(8px) saturate(1.3);z-index:1;pointer-events:none}
+.orbit-card:after{content:'';position:absolute;inset:8% 9%;border-radius:23px;background:linear-gradient(115deg,transparent 25%,#fff0 38%,#ffffff9c 48%,#caeaff60 52%,transparent 65%);opacity:.5;transform:skewX(-4deg);pointer-events:none;z-index:2;transition:opacity .3s}
+.orbit-card-label{z-index:3;text-shadow:0 1px 12px #163c4d80;font-weight:500}
+.orbit-card-art{opacity:.95}.orbit-card.is-active{opacity:0;pointer-events:none}
+.orbit-flagship:before{border-color:#fff;box-shadow:inset 1px 1px 3px #fff,inset -2px -2px 8px #d7ffffb3,0 14px 38px #209dab35}
+.orbit-flagship-label{position:absolute;left:0;right:0;bottom:21%;z-index:3;color:#fff;font-size:8px;letter-spacing:.015em;text-shadow:0 1px 10px #15475180;pointer-events:none}
+.orbit-flagship .orbit-card-label{padding-bottom:22%}
+.home-orbit.is-project-open .orbit-card:not(.is-active){opacity:.42}
+.home-orbit.is-project-open .orbit-copy{opacity:.18;filter:blur(3px)}
+.home-orbit .home-company-preview{display:grid;grid-template-columns:auto auto;column-gap:22px;row-gap:6px;align-items:center;width:max-content;max-width:calc(100% - 32px)}
+.home-orbit .home-company-preview>p{grid-column:1;grid-row:1;margin:0;text-align:left}
+.home-orbit .company-orbits{grid-column:1;grid-row:2}
+.company-experience{grid-column:2;grid-row:1 / span 2;display:flex;align-items:center;gap:9px;padding-left:22px;border-left:1px solid var(--line);text-align:left}
+.company-experience>strong{font-size:42px;line-height:1;font-weight:500;letter-spacing:-.065em}.company-experience>span{font-size:11px;line-height:1.3;color:var(--muted)}
+/* The preview grows from the selected card, clamped just enough to stay on screen. */
+.orbit-preview{left:var(--preview-x,50%);top:var(--preview-y,50%);width:var(--preview-width,400px);min-width:0;max-width:none;padding:12px 12px 18px;border:1px solid #ffffffa8;border-radius:24px;background:linear-gradient(135deg,#ffffffba,#ffffff80 50%,#e5f7f0b8);box-shadow:inset 0 1px 1px #fff,0 26px 80px #193c4c22;backdrop-filter:blur(16px) saturate(1.15);-webkit-backdrop-filter:blur(16px) saturate(1.15);transform:translate(-50%,-50%) scale(.65);transform-origin:var(--preview-origin-x,50%) var(--preview-origin-y,50%);transition:opacity .22s,transform .6s cubic-bezier(.16,1,.3,1),visibility .25s}
+.orbit-preview.is-visible{transform:translate(-50%,-50%) scale(1)}
+.dark .orbit-preview{background:linear-gradient(135deg,#303a41e8,#151c23df 55%,#223934e0);border-color:#ffffff42;box-shadow:inset 0 1px 1px #ffffff40,0 26px 80px #0005}
+.orbit-main-link{overflow:hidden;border-radius:14px;isolation:isolate}
+.orbit-main-image{border-radius:14px;box-shadow:none}
+.orbit-main-link:after{content:'';position:absolute;inset:-20% -15% 48%;z-index:1;pointer-events:none;border-radius:50%;background:linear-gradient(155deg,#d6ffff00 20%,#ceffff88 42%,#9cebd84a 48%,#c3cfff66 52%,#fff8 55%,transparent 64%);backdrop-filter:blur(4px) saturate(1.6);-webkit-backdrop-filter:blur(4px) saturate(1.6);opacity:0;transform:translateY(-75%) scaleX(1.4) skewX(-10deg)}
+.orbit-preview.is-visible .orbit-main-link:after{animation:project-refraction .85s cubic-bezier(.2,.7,.2,1) both}
+.orbit-preview.is-visible .orbit-main-image{animation:project-unfold .7s cubic-bezier(.16,1,.3,1) both;transform-origin:50% 0}
+.orbit-preview[data-flagship=true]{border-color:#bceee5;box-shadow:inset 0 1px 1px #fff,0 0 0 4px #c7f5e124,0 26px 80px #24999c26}
+.orbit-project-copy{margin-top:24px}.orbit-project-name{font-size:21px}.orbit-project-description{font-size:12px;margin:9px auto 12px;max-width:340px}.orbit-project-kind,.orbit-project-link{font-size:10px}
+.orbit-cutout{width:25%;height:53%;z-index:2}.cutout-one{left:-9%;bottom:-5%}.cutout-two{right:-8%;top:-7%}
+@keyframes project-refraction{0%{opacity:0;transform:translateY(-40%) scaleX(1.25) skewX(-12deg)}30%{opacity:.85}100%{opacity:0;transform:translateY(-115%) scaleX(1.7) skewX(0)}}
+@keyframes project-unfold{from{filter:blur(7px) saturate(1.35);transform:perspective(700px) rotateX(-13deg) scaleY(1.16)}to{filter:blur(0);transform:perspective(700px) rotateX(0) scaleY(1)}}
+.liquid-click-wave{z-index:1200;background:conic-gradient(from 190deg at var(--wave-x) var(--wave-y),#b1eeea,#bdc8ed,#e0cbdb,#eee5d0,#c3ecd7,#ade0e5,#b1eeea)}
+/* The case logo now shares the title's baseline and approximate cap height. */
+.hero-heading-row{display:flex;align-items:center;gap:clamp(16px,2.2vw,36px);font-size:clamp(40px,6.3vw,110px);margin-bottom:10px}
+.hero-heading-row h1{font-size:inherit;line-height:1;margin:0;min-width:0}
+.hero-heading-row .hero-logo{width:1.02em;height:1.02em;flex-shrink:0;margin-left:2px}
+.hero-heading-row .hero-logo img{width:100%;height:100%}
+.hero-copy .hero-bottom p{transform:translateX(4px)}
+/* One soft sea-glass/pearl ripple, rather than a repeating rainbow. */
+footer:before{background:radial-gradient(circle,#b1dad367 0%,#d6e7de35 35%,transparent 68%)}footer:after{border-color:#7ca6a328}
+footer .footer-cta{position:relative;isolation:isolate}
+footer .footer-cta:hover .footer-gradient,footer .footer-cta:focus-visible .footer-gradient{background-image:linear-gradient(110deg,#20251e 0%,#20251e 36%,#568980 43%,#b4d7d0 48%,#eef6ed 51%,#8bb4b4 54%,#537b77 59%,#20251e 67%,#20251e 100%);animation:footer-text-sweep 1.7s cubic-bezier(.2,.6,.3,1) 1 both}
+.dark footer .footer-cta:hover .footer-gradient,.dark footer .footer-cta:focus-visible .footer-gradient{background-image:linear-gradient(110deg,#f3f3f5 0%,#f3f3f5 36%,#a4c8bf 43%,#d9eee6 48%,#fff 51%,#a1cdd2 54%,#a4b9cc 59%,#f3f3f5 67%,#f3f3f5 100%)}
+/* Native same-origin document transition; a short entrance is the fallback. */
+.project-departure .orbit-main-link,.project-arrival .hero{view-transition-name:sber-project}
+.project-arrival::view-transition-group(sber-project){animation-duration:.85s;animation-timing-function:cubic-bezier(.16,1,.3,1);overflow:clip;border-radius:24px}
+.project-arrival::view-transition-new(root){animation:project-page-reveal .85s cubic-bezier(.16,1,.3,1) both}
+.project-arrival::view-transition-old(root){animation:project-page-fade .5s both}
+@keyframes project-page-reveal{from{clip-path:circle(0 at var(--route-x,50%) var(--route-y,50%));filter:blur(3px)}to{clip-path:circle(160vmax at var(--route-x,50%) var(--route-y,50%));filter:blur(0)}}
+@keyframes project-page-fade{to{opacity:0}}
+@supports not (view-transition-name:sber-project){.project-arrival main{animation:project-fallback-arrival .6s ease-out both}}
+@keyframes project-fallback-arrival{from{opacity:.4;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(max-width:600px){.orbit-card:before,.orbit-card:after{border-radius:16px}.orbit-flagship-label{font-size:6px;bottom:19%}.home-orbit .home-company-preview{column-gap:14px}.company-experience{padding-left:14px;gap:7px}.company-experience>strong{font-size:36px}.company-experience>span{font-size:10px}.orbit-preview{padding:9px 9px 14px;border-radius:18px}.orbit-project-name{font-size:18px}.orbit-project-description{font-size:11px}.orbit-project-kind{font-size:9px}.hero-heading-row{font-size:clamp(27px,6.6vw,42px);gap:12px;margin-bottom:8px}}
+@media(prefers-reduced-motion:reduce){.orbit-preview.is-visible .orbit-main-image,.orbit-preview.is-visible .orbit-main-link:after,footer .footer-cta:hover:after,footer .footer-cta:focus-visible:after,footer .footer-cta:hover .footer-gradient,footer .footer-cta:focus-visible .footer-gradient{animation:none}.project-arrival::view-transition-group(*),.project-arrival::view-transition-new(root),.project-arrival::view-transition-old(root){animation-duration:.01ms!important}.orbit-card:before,.orbit-preview{backdrop-filter:none;-webkit-backdrop-filter:none}}
